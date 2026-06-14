@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# UZMA-AutoEnum v1.1 - 8 Demand HTB Tool
+# UZMA-AutoEnum v1.2 - 8 Demand HTB Tool
 
-# Demand 1: Auto Nmap | Demand 2: Web Enum
+# Demand 1: Auto Nmap | Demand 2: Web Enum | Demand 3: Subdomain Finder
 
 
 TARGET=$1
@@ -16,6 +16,8 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 
 PURPLE='\033[0;35m'
+
+CYAN='\033[0;36m'
 
 NC='\033[0m'
 
@@ -36,7 +38,7 @@ echo "+¦¦¦¦¦¦++¦¦¦¦¦¦¦+¦¦¦ +-+ ¦¦¦¦¦¦ ¦¦¦"
 
 echo " +-----+ +------++-+ +-++-+ +-+"
 
-echo -e "${NC}${YELLOW} AutoEnum v1.1 | Built by UZMA ??${NC}"
+echo -e "${NC}${YELLOW} AutoEnum v1.2 | Built by UZMA ??${NC}"
 
 }
 
@@ -45,7 +47,7 @@ if [ -z "$TARGET" ]; then
 
 banner
 
-echo -e "${RED}[!] Usage: ./uzma-autoenum.sh <IP>${NC}"
+echo -e "${RED}[!] Usage: ./uzma-autoenum.sh <IP_OR_DOMAIN>${NC}"
 
 exit 1
 
@@ -99,15 +101,18 @@ if [ "$port" == "443" ]; then
 
 url="https://$TARGET"
 
+domain=$TARGET
+
 else
 
 url="http://$TARGET:$port"
+
+domain=$TARGET
 
 fi
 
 
 echo -e "${YELLOW}[+] Enumerating $url ${NC}"
-
 
 echo -e "${BLUE}[*] Running WhatWeb...${NC}"
 
@@ -129,18 +134,37 @@ done
 
 echo -e "${GREEN}[+] Demand 2 COMPLETE ?${NC}"
 
+
+# DEMAND 3: SUBDOMAIN FINDER
+
+echo -e "${CYAN}[*] Demand 3: Starting Subdomain Finder...${NC}"
+
+echo -e "${BLUE}[*] Running Subfinder...${NC}"
+
+subfinder -d $domain -silent -o uzma_results/subfinder.txt
+
+
+echo -e "${BLUE}[*] Running Assetfinder...${NC}"
+
+assetfinder --subs-only $domain > uzma_results/assetfinder.txt
+
+
+echo -e "${BLUE}[*] Merging + Checking live subdomains with Httpx...${NC}"
+
+cat uzma_results/subfinder.txt uzma_results/assetfinder.txt | sort -u | httpx -silent -o uzma_results/live_subdomains.txt
+
+
+echo -e "${GREEN}[+] Live subdomains found: $(wc -l < uzma_results/live_subdomains.txt)${NC}"
+
+echo -e "${GREEN}[+] Demand 3 COMPLETE ?${NC}"
+
 else
 
-echo -e "${YELLOW}[!] No web ports found. Skipping Demand 2${NC}"
+echo -e "${YELLOW}[!] No web ports found. Skipping Demand 2 & 3${NC}"
 
 fi
 
 
 echo -e "${GREEN}[+] All results saved in: uzma_results/${NC}"
 
-echo -e "${YELLOW}[+] Next: Demand 3 Subdomain Finder...${NC}"
-
-
-
-
-
+echo -e "${YELLOW}[+] Next:
